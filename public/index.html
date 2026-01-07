@@ -13,6 +13,9 @@
 </head>
 
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <i class="fas fa-moon"></i>
+    </button>
     <div class="auth-container">
         <div class="icon-header">
             <i class="fas fa-chalkboard-teacher fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
@@ -35,6 +38,7 @@
         </p>
     </div>
 
+    <script src="js/theme.js"></script>
     <script>
         const API_URL = 'http://localhost:3000/api';
 

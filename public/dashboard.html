@@ -20,12 +20,15 @@
         </div>
         <nav style="display: flex; gap: 1.5rem; margin-left: 2rem;">
             <a href="dashboard.html" style="text-decoration: none; color: var(--primary); font-weight: 600;">Home</a>
-            <a href="timetable.html" style="text-decoration: none; color: #666;">Timetable</a>
+            <a href="timetable.html" style="text-decoration: none; color: var(--text-secondary, #666);">Timetable</a>
         </nav>
         <div class="user-info">
             <div id="greeting" class="greeting" style="margin-right: 15px; font-weight: 600; color: var(--primary);">
             </div>
             <span id="welcomeMsg" style="display: none;">Welcome, Teacher</span>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" style="width: auto; padding: 8px 12px; margin-right: 10px;">
+                <i class="fas fa-moon"></i>
+            </button>
             <button class="secondary" onclick="logout()" style="width: auto; padding: 8px 16px;">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
@@ -77,7 +80,7 @@
 
             <div id="taskList" class="task-list">
                 <!-- Tasks will be injected here -->
-                <div style="text-align: center; color: #888; padding: 2rem;">Loading tasks...</div>
+                <div style="text-align: center; color: var(--text-muted, #888); padding: 2rem;">Loading tasks...</div>
             </div>
 
             <!-- New Timetable Section -->
@@ -114,6 +117,7 @@
         preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="js/theme.js"></script>
     <script src="js/greetings.js"></script>
     <script src="js/greetings-simple.js"></script>
     <script src="js/app.js"></script>
