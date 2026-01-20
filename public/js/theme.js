@@ -1,13 +1,17 @@
 // Theme management script
-(function() {
+(function () {
     'use strict';
 
     const THEME_KEY = 'theme-preference';
     const THEME_ATTRIBUTE = 'data-theme';
 
-    // Get saved theme or default to light
+    // Get saved theme or default to system preference
     function getTheme() {
-        return localStorage.getItem(THEME_KEY) || 'light';
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme) return savedTheme;
+
+        // Check system preference
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
     // Set theme
@@ -45,6 +49,13 @@
     function initTheme() {
         const savedTheme = getTheme();
         setTheme(savedTheme);
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (!localStorage.getItem(THEME_KEY)) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
     }
 
     // Make functions available globally

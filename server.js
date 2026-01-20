@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 const db = require('./database');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = 'task-scheduler-secret-123'; // Hardcoded for local dev
 
 const app = express();
 const PORT = 3000;
@@ -14,14 +18,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 // --- API ROUTES ---
 
 // Login
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
     let user = db.find('users', u => u.username === username);
 
     if (user) {
-        if (user.password === password) {
-            res.json({ success: true, user: { id: user.id, username: user.username } });
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (isMatch) {
+            const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
+            res.json({
+                success: true,
+                token,
+                user: { id: user.id, username: user.username, role: user.role }
+            });
         } else {
             res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
@@ -31,11 +41,11 @@ app.post('/api/login', (req, res) => {
 });
 
 // Signup
-app.post('/api/signup', (req, res) => {
-    const { username, password } = req.body;
+app.post('/api/signup', async (req, res) => {
+    const { username, password, role } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).json({ success: false, message: 'Username and password are required' });
+    if (!username || !password || !role) {
+        return res.status(400).json({ success: false, message: 'Username, password and role are required' });
     }
 
     // Check if user already exists
@@ -44,8 +54,23 @@ app.post('/api/signup', (req, res) => {
         return res.status(400).json({ success: false, message: 'Username already taken' });
     }
 
-    const newUser = db.add('users', { username, password });
-    res.json({ success: true, user: { id: newUser.id, username: newUser.username }, message: 'Account created successfully!' });
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = db.add('users', {
+            username,
+            password: hashedPassword,
+            role,
+            createdAt: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            user: { id: newUser.id, username: newUser.username, role: newUser.role },
+            message: 'Account created successfully!'
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error creating account' });
+    }
 });
 
 // Get Tasks
@@ -60,7 +85,7 @@ app.get('/api/tasks', (req, res) => {
 
 // Add Task
 app.post('/api/tasks', (req, res) => {
-    const { title, description, date, time, userId } = req.body;
+    const { title, description, date, time, userId, category, priority } = req.body;
     if (!title || !date || !time || !userId) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -71,6 +96,8 @@ app.post('/api/tasks', (req, res) => {
         date,
         time,
         userId,
+        category: category || 'General',
+        priority: priority || 'Medium',
         status: 'Pending',
         createdAt: new Date().toISOString()
     };
@@ -92,19 +119,35 @@ app.put('/api/tasks/:id', (req, res) => {
     }
 });
 
-// Delete Task
-app.delete('/api/tasks/:id', (req, res) => {
-    const { id } = req.params;
-    const deleted = db.delete('tasks', id);
-    if (deleted) {
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: 'Task not found' });
-    }
+// Generic API Handler for other collections
+const collections = ['classes', 'lessonPlans', 'assignments', 'habits', 'holidays'];
+
+collections.forEach(col => {
+    app.get(`/api/${col}`, (req, res) => {
+        const userId = req.query.userId;
+        const allItems = db.get(col) || [];
+        const userItems = userId ? allItems.filter(i => i.userId === userId) : allItems;
+        res.json(userItems);
+    });
+
+    app.post(`/api/${col}`, (req, res) => {
+        const item = {
+            ...req.body,
+            createdAt: new Date().toISOString()
+        };
+        const added = db.add(col, item);
+        res.json(added);
+    });
+
+    app.delete(`/api/${col}/:id`, (req, res) => {
+        const { id } = req.params;
+        const deleted = db.delete(col, id);
+        res.json({ success: !!deleted });
+    });
 });
 
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`Teacher Task Scheduler is ready!`);
+    console.log(`Task Scheduler is ready!`);
 });

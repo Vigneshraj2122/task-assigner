@@ -185,7 +185,7 @@
                 events = [];
                 saveEvents();
                 renderGrid();
-                if (window.TeacherCheer) window.TeacherCheer.show('All cleared!');
+                if (window.AppCheer) window.AppCheer.show('All cleared!');
             }
         };
 
@@ -194,7 +194,7 @@
             saveEvents();
             renderGrid();
             closeModal();
-            if (window.TeacherCheer) window.TeacherCheer.show('Entry deleted');
+            if (window.AppCheer) window.AppCheer.show('Entry deleted');
         };
 
         eventForm.onsubmit = (e) => {
@@ -213,7 +213,7 @@
             saveEvents();
             renderGrid();
             closeModal();
-            if (window.TeacherCheer) window.TeacherCheer.show(currentEventId ? 'Updated!' : 'Saved to timetable!');
+            if (window.AppCheer) window.AppCheer.show(currentEventId ? 'Updated!' : 'Saved to timetable!');
         };
     }
 

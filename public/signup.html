@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Task Scheduler | Sign Up</title>
+    <title>Task Scheduler | Sign Up</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -13,18 +13,25 @@
 </head>
 
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"
+        style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
         <i class="fas fa-moon"></i>
     </button>
     <div class="auth-container">
         <div class="icon-header">
-            <i class="fas fa-user-plus fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+            <i class="fas fa-user-plus fa-3x" style="color: var(--primary-solid); margin-bottom: 20px;"></i>
         </div>
         <h1>Join the Community</h1>
-        <p>Create your teacher account to start organizing your tasks.</p>
+        <p>Create your account to start organizing your tasks.</p>
 
         <form id="signupForm">
             <input type="text" id="username" placeholder="Username (e.g. Ms. Smith)" required>
+            <select id="role" required>
+                <option value="" disabled selected>Select Your Role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="general">General User</option>
+            </select>
             <input type="password" id="password" placeholder="Create Password" required>
             <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
             <button type="submit">
@@ -35,7 +42,7 @@
 
         <p style="margin-top: 20px; font-size: 0.9rem;">
             Already have an account? <a href="index.html"
-                style="color: var(--primary); text-decoration: none; font-weight: 600;">Log in</a>
+                style="color: var(--primary-solid); text-decoration: none; font-weight: 600;">Log in</a>
         </p>
     </div>
 
@@ -46,6 +53,7 @@
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
+            const role = document.getElementById('role').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
@@ -58,7 +66,7 @@
                 const response = await fetch(`${API_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password, role })
                 });
 
                 const data = await response.json();

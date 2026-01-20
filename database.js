@@ -3,56 +3,66 @@ const path = require('path');
 
 const DB_FILE = path.join(__dirname, 'data.json');
 
-// Initialize DB if not exists
-if (!fs.existsSync(DB_FILE)) {
-    const initialData = {
-        users: [],
-        tasks: []
-    };
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
+// Memory Cache
+let dbCache = null;
+
+function init() {
+    if (!fs.existsSync(DB_FILE)) {
+        const initialData = {
+            users: [],
+            tasks: [],
+            classes: [],
+            lessonPlans: [],
+            assignments: [],
+            habits: [],
+            holidays: [],
+            gamification: {}
+        };
+        fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
+    }
+    dbCache = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 }
 
-function readDB() {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-}
+init();
 
-function writeDB(data) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+function persist() {
+    // Write asynchronously to not block the event loop
+    fs.writeFile(DB_FILE, JSON.stringify(dbCache, null, 2), (err) => {
+        if (err) console.error('DB Write Error:', err);
+    });
 }
 
 module.exports = {
     get: (collection) => {
-        const db = readDB();
-        return db[collection] || [];
+        return dbCache[collection] || [];
     },
     add: (collection, item) => {
-        const db = readDB();
-        if (!db[collection]) db[collection] = [];
-        item.id = Date.now().toString(); // Simple ID generation
-        db[collection].push(item);
-        writeDB(db);
-        return item;
+        if (!dbCache[collection]) dbCache[collection] = [];
+        const newItem = {
+            ...item,
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5) // Slightly better unique ID
+        };
+        dbCache[collection].push(newItem);
+        persist();
+        return newItem;
     },
     update: (collection, id, updates) => {
-        const db = readDB();
-        if (!db[collection]) return null;
-        const index = db[collection].findIndex(i => i.id === id);
+        if (!dbCache[collection]) return null;
+        const index = dbCache[collection].findIndex(i => i.id === id);
         if (index === -1) return null;
-        
-        db[collection][index] = { ...db[collection][index], ...updates };
-        writeDB(db);
-        return db[collection][index];
+
+        dbCache[collection][index] = { ...dbCache[collection][index], ...updates };
+        persist();
+        return dbCache[collection][index];
     },
     delete: (collection, id) => {
-        const db = readDB();
-        if (!db[collection]) return false;
-        const initialLength = db[collection].length;
-        db[collection] = db[collection].filter(i => i.id !== id);
-        writeDB(db);
-        return db[collection].length < initialLength;
+        if (!dbCache[collection]) return false;
+        const initialLength = dbCache[collection].length;
+        dbCache[collection] = dbCache[collection].filter(i => i.id !== id);
+        persist();
+        return dbCache[collection].length < initialLength;
     },
     find: (collection, predicate) => {
-        const db = readDB();
-        return (db[collection] || []).find(predicate);
+        return (dbCache[collection] || []).find(predicate);
     }
 };

@@ -21,5 +21,5 @@
         }, 2500);
     }
 
-    window.TeacherCheer = { show: showCheer };
+    window.AppCheer = { show: showCheer };
 })();

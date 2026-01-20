@@ -2,23 +2,55 @@
   "users": [
     {
       "username": "saravanansaravanan9567@gmail.com",
-      "password": "vignesh2122",
-      "id": "1767436605236"
+      "password": "$2b$10$R.r1geSe5E/SkY1WUyCmhO53NlIrAq5M2bTUmBBfSpW7i/61qmGdK",
+      "id": "1767436605236",
+      "role": "teacher"
     },
     {
       "username": "vignesh",
-      "password": "123456",
-      "id": "1767515842846"
+      "password": "$2b$10$RmFuNUU..jObs2ySBRnu2uMrp8ebAyHg9ct7WVgvw7Z1/bwccYF7q",
+      "id": "1767515842846",
+      "role": "teacher"
     },
     {
       "username": "carl_teacher",
-      "password": "password123",
-      "id": "1767515954829"
+      "password": "$2b$10$xEiyJz4QT0qP6FXrTjwLkuxyHRrihb4SjCEXG3axfB1n0bp62jVeK",
+      "id": "1767515954829",
+      "role": "teacher"
     },
     {
       "username": "vicky",
-      "password": "123456",
-      "id": "1767533484982"
+      "password": "$2b$10$4dCAd312Gpu7bLBmO19tAOMsUqwXtu.bPtJjKCUsDh9GbuaPDZFl2",
+      "id": "1767533484982",
+      "role": "teacher"
+    },
+    {
+      "username": "vigneshraj",
+      "password": "$2b$10$Fxs1plQgGZ0bxyGSIPiFFOCm0sb5EZSfP3j3Bu8Jx6SxL0O/GCMIW",
+      "role": "student",
+      "createdAt": "2026-01-20T15:53:57.565Z",
+      "id": "1768924437566"
+    },
+    {
+      "username": "vignesh06",
+      "password": "$2b$10$KIrABlbkkvyLSRtr0zFZ..Q5A5rLCNofUrA34S.K60LfHrMfga256",
+      "role": "student",
+      "createdAt": "2026-01-20T15:55:36.380Z",
+      "id": "1768924536380"
+    },
+    {
+      "username": "minhaj",
+      "password": "$2b$10$b690NHbgKd86H5ILcU3JkubnOAR5DsTD.QT5py0mqCLziRAPHElBK",
+      "role": "teacher",
+      "createdAt": "2026-01-20T15:58:22.672Z",
+      "id": "1768924702673"
+    },
+    {
+      "username": "santhosh",
+      "password": "$2b$10$voEwfMn3RUq6lCeEXHmLJ.D4QhINCVm.ogFIkjxxCGv2q.M4DZA3O",
+      "role": "general",
+      "createdAt": "2026-01-20T16:13:22.519Z",
+      "id": "1768925602519j8r2n"
     }
   ],
   "tasks": [
@@ -51,6 +83,77 @@
       "status": "Done",
       "createdAt": "2026-01-06T04:53:11.635Z",
       "id": "1767675191636"
+    },
+    {
+      "title": "paper correction",
+      "description": "",
+      "date": "2026-01-20",
+      "time": "12:26",
+      "userId": "1767436605236",
+      "status": "Done",
+      "createdAt": "2026-01-20T06:56:19.722Z",
+      "id": "1768892179723"
+    },
+    {
+      "title": "paper correction",
+      "description": "",
+      "date": "2026-01-20",
+      "time": "20:53",
+      "userId": "1767436605236",
+      "category": "Study",
+      "priority": "High",
+      "status": "Done",
+      "createdAt": "2026-01-20T15:23:43.425Z",
+      "id": "1768922623426"
+    },
+    {
+      "title": "assignment complition",
+      "description": "",
+      "date": "2026-01-20",
+      "time": "20:54",
+      "userId": "1767436605236",
+      "category": "Study",
+      "priority": "Low",
+      "status": "Done",
+      "createdAt": "2026-01-20T15:24:15.590Z",
+      "id": "1768922655591"
+    },
+    {
+      "title": "seminar",
+      "description": "",
+      "date": "2026-01-20",
+      "time": "21:44",
+      "userId": "1767436605236",
+      "category": "Work",
+      "priority": "Low",
+      "status": "Done",
+      "createdAt": "2026-01-20T16:14:35.579Z",
+      "id": "1768925675579f6shq"
+    },
+    {
+      "title": "seminar",
+      "description": "",
+      "date": "2026-01-20",
+      "time": "21:45",
+      "userId": "1767436605236",
+      "category": "Work",
+      "priority": "High",
+      "status": "Done",
+      "createdAt": "2026-01-20T16:15:11.523Z",
+      "id": "176892571152622o7g"
     }
-  ]
+  ],
+  "classes": [],
+  "lessonPlans": [],
+  "assignments": [],
+  "habits": [
+    {
+      "name": "drink water",
+      "userId": "1768924702673",
+      "createdAt": "2026-01-20T15:59:34.789Z",
+      "id": "1768924774789"
+    }
+  ],
+  "holidays": [],
+  "gamification": {}
 }

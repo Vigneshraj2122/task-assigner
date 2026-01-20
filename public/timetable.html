@@ -1,124 +1,148 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Timetable — Task Assigner</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable | Task Scheduler</title>
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/timetable.css">
-    <link rel="stylesheet" href="css/cheer.css">
-    <link rel="stylesheet" href="css/style.css"> <!-- Including main styles for variables -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 
-<body>
-    <header class="site-header"
-        style="background: var(--bg-navbar, white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-navbar, var(--shadow)); transition: background 0.3s ease;">
-        <div class="header-left" style="display: flex; align-items: center; gap: 2rem;">
-            <a href="dashboard.html" class="brand"
-                style="font-weight: 700; font-size: 1.5rem; color: var(--primary); text-decoration: none;">Task
-                Assigner</a>
-            <nav style="display: flex; gap: 1rem;">
-                <a href="dashboard.html" style="text-decoration: none; color: var(--text-secondary, #666);">Home</a>
-                <a href="timetable.html" class="active"
-                    style="text-decoration: none; color: var(--primary); font-weight: 600;">Timetable</a>
-            </nav>
+<body class="fullscreen-body">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-calendar-check"></i>
+            <span>Task Scheduler</span>
         </div>
-        <div class="header-right" style="display: flex; align-items: center; gap: 1rem;">
-            <div id="greeting" class="greeting" aria-live="polite" style="font-weight: 600; color: var(--primary);">
-            </div>
-            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" style="width: auto; padding: 5px 12px;">
+        <nav style="display: flex; gap: 1.5rem; margin-left: 2rem;">
+            <a href="dashboard.html" style="text-decoration: none; color: var(--text-secondary, #666);">Home</a>
+            <a href="calendar.html" style="text-decoration: none; color: var(--text-secondary, #666);">Calendar</a>
+            <a href="timetable.html"
+                style="text-decoration: none; color: var(--primary-solid); font-weight: 800;">Timetable</a>
+        </nav>
+        <div class="user-info">
+            <div id="roleBadge"
+                style="background: var(--secondary); color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-right: 10px;">
+                User</div>
+            <div id="greeting" class="greeting"
+                style="margin-right: 15px; font-weight: 600; color: var(--primary-solid);"></div>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"
+                style="width: auto; padding: 8px 12px; margin-right: 10px;">
                 <i class="fas fa-moon"></i>
             </button>
-            <button id="set-name-btn" class="btn small" style="width: auto; padding: 5px 15px;">Set name</button>
-            <button class="secondary" onclick="location.href='index.html'"
-                style="width: auto; padding: 5px 15px;">Logout</button>
+            <button class="secondary" onclick="logout()" style="width: auto; padding: 8px 16px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
         </div>
-    </header>
+    </nav>
 
-    <main class="main" style="padding: 2rem;">
-        <section class="timetable-section card">
+    <main class="full-screen-container">
+        <section class="timetable-section full-screen-card">
             <div class="controls"
-                style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
-                <label for="start-day">Start day:</label>
-                <select id="start-day" style="width: auto;">
-                    <option value="1">Monday</option>
-                    <option value="0">Sunday</option>
-                </select>
+                style="display: flex; gap: 1.5rem; align-items: center; padding: 1rem 2rem; background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-wrap: wrap;">
+                <div>
+                    <label style="font-weight:700; font-size:0.8rem; margin-right:10px;">START DAY</label>
+                    <select id="start-day" style="width: auto; margin:0;">
+                        <option value="1">Monday</option>
+                        <option value="0">Sunday</option>
+                    </select>
+                </div>
 
-                <label for="days-count">Days:</label>
-                <select id="days-count" style="width: auto;">
-                    <option value="5" selected>Mon–Fri (5)</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                </select>
+                <div>
+                    <label style="font-weight:700; font-size:0.8rem; margin-right:10px;">DAYS COUNT</label>
+                    <select id="days-count" style="width: auto; margin:0;">
+                        <option value="5" selected>Mon–Fri (5)</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                    </select>
+                </div>
 
-                <label for="slot-minutes">Slot (min):</label>
-                <select id="slot-minutes" style="width: auto;">
-                    <option value="30" selected>30</option>
-                    <option value="60">60</option>
-                </select>
+                <div>
+                    <label style="font-weight:700; font-size:0.8rem; margin-right:10px;">SLOT (MIN)</label>
+                    <select id="slot-minutes" style="width: auto; margin:0;">
+                        <option value="30" selected>30</option>
+                        <option value="60">60</option>
+                    </select>
+                </div>
 
-                <button id="clear-storage" class="btn danger" style="width: auto;">Clear local events</button>
+                <button id="clear-storage" class="secondary"
+                    style="width: auto; color: #ef4444; border-color:#fee2e2; margin-left:auto;">
+                    <i class="fas fa-trash-alt"></i> Clear All Events
+                </button>
             </div>
 
-            <div id="timetable" class="timetable" role="grid" aria-label="Weekly timetable"></div>
+            <div id="timetable" class="timetable" style="border-radius:0; border:none;"></div>
         </section>
     </main>
 
     <!-- Modal for creating/editing an event -->
-    <div id="event-modal" class="modal" aria-hidden="true"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000;">
-        <div class="modal-backdrop" style="background: rgba(0,0,0,0.5); width: 100%; height: 100%; position: absolute; transition: background 0.3s ease;">
-        </div>
-        <div class="modal-panel card" role="dialog" aria-modal="true" aria-labelledby="modal-title"
-            style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 500px; width: 90%; background: var(--bg-card, white); padding: 2rem; transition: background 0.3s ease;">
-            <h2 id="modal-title">Create timetable entry</h2>
-            <form id="event-form">
+    <div id="event-modal" class="card"
+        style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; width: 450px; background:var(--bg-card); backdrop-filter:blur(30px);">
+        <h2><i class="fas fa-calendar-plus"></i> Timetable Entry</h2>
+        <form id="event-form">
+            <div class="form-row">
+                <label>Title</label>
+                <input id="evt-title" name="title" placeholder="e.g. Physics Lecture" required />
+            </div>
+            <div class="form-row">
+                <label>Description</label>
+                <input id="evt-desc" name="description" placeholder="Room 302..." />
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <div class="form-row">
-                    <label for="evt-title">Title</label>
-                    <input id="evt-title" name="title" required />
-                </div>
-                <div class="form-row">
-                    <label for="evt-desc">Description</label>
-                    <input id="evt-desc" name="description" />
-                </div>
-                <div class="form-row">
-                    <label for="evt-day">Day</label>
+                    <label>Day</label>
                     <select id="evt-day" name="day"></select>
                 </div>
                 <div class="form-row">
-                    <label for="evt-start">Start time</label>
+                    <label>Start Time</label>
                     <input id="evt-start" name="start" type="time" required />
                 </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <div class="form-row">
-                    <label for="evt-duration">Duration (minutes)</label>
-                    <input id="evt-duration" name="duration" type="number" min="1" step="30" value="30" required />
+                    <label>Duration (mins)</label>
+                    <input id="evt-duration" name="duration" type="number" min="15" step="15" value="60" required />
                 </div>
                 <div class="form-row">
-                    <label for="evt-priority">Priority</label>
+                    <label>Priority</label>
                     <select id="evt-priority" name="priority">
                         <option value="1">High</option>
                         <option value="2" selected>Normal</option>
                         <option value="3">Low</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <label for="evt-tags">Tags (comma separated)</label>
-                    <input id="evt-tags" name="tags" placeholder="math,homework" />
-                </div>
-                <div class="form-actions" style="margin-top: 1.5rem; display: flex; gap: 10px;">
-                    <button type="submit" class="btn primary">Save</button>
-                    <button type="button" id="evt-cancel" class="btn">Cancel</button>
-                    <button type="button" id="evt-delete" class="btn danger" hidden>Delete</button>
-                </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 1.5rem; display: flex; gap: 10px;">
+                <button type="submit">Save Entry</button>
+                <button type="button" id="evt-cancel" class="secondary">Cancel</button>
+                <button type="button" id="evt-delete" class="secondary" style="color:#ef4444;" hidden>Delete</button>
+            </div>
+        </form>
+    </div>
+    <div id="modalOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:1999;">
     </div>
 
     <script src="js/theme.js"></script>
-    <script src="js/greeting.js"></script>
-    <script src="js/cheer.js"></script>
     <script src="js/timetable.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('roleBadge').innerText = user.role || 'User';
+            document.getElementById('greeting').innerText = `Hi, ${user.username}`;
+        }
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 
 </html>

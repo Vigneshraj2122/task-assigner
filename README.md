@@ -1,46 +1,43 @@
-# 🏫 Teacher Task Scheduler
+# 🚀 Smart Multi-User Task Scheduler
 
-A premium, easy-to-use Task Scheduler application designed specifically for teachers to manage their daily classes, tasks, and reminders.
+A premium, all-in-one productivity hub designed for **Students, Teachers, and General Users**. This application streamlines task management, academic coordination, and lifestyle organization with a focus on speed and reliability.
 
-## ✨ Features
-- **User Friendly**: Simple Login/Signup (auto-detects new users).
-- **Task Management**: Add tasks with specific dates and times.
-- **Integrated Timetable**: Real-time chronological view of your day directly on the dashboard.
-- **Smart Next-Class Alerts**: Instant notification of your next class as soon as you finish the current one.
-- **Celebration Feedback**: Confetti bursts and success sounds when you complete your work.
+## ✨ Key Capabilities
+
+### 👥 For Every User
+- **Secure Authentication**: Encrypted registration and login.
+- **Advanced Task Management**: Prioritize tasks, set deadlines, and handle recurring routines.
+- **Categorization**: Keep your life organized with Study, Work, Personal, and Health categories.
+- **Smart Views**: Daily, weekly, and monthly calendar formats.
+- **Productivity Tracking**: Visual analytics to monitor your progress.
+
+### 🎓 For Students
+- **Academic Hub**: Manage study schedules and track deadlines.
+- **Classroom Sync**: View and complete tasks assigned by teachers instantly.
+- **Progress Monitoring**: Visualize your course completion and academic targets.
+
+### 👩‍🏫 For Teachers
+- **Assignment Hub**: Create and assign tasks to individuals or entire groups.
+- **Efficiency Tools**: Monitor completion status and provide direct feedback.
+- **Classroom Management**: Organize students and manage classroom schedules.
+
+### 🛠️ Advanced Features
+- **Smart Priority Alerts**: ⏰ Customizable notifications for high-priority tasks.
+- **Offline Experience**: ☁️ Work anywhere with automatic sync once you're back online.
+- **Visual Analytics**: 📊 Beautiful progress charts and productivity insights.
+- **Universal Sync**: 📱 Fully responsive design for mobile, tablet, and desktop.
+- **Premium Aesthetics**: 🌙 Dark mode support and modern, accessible UI.
 
 ## 🛠️ Technology Stack
-- **Frontend**: HTML5, CSS3 (Custom Variables & Grids), Vanilla JavaScript.
-- **Backend**: Node.js, Express.js.
-- **Database**: Local JSON File (Zero-config, ready to run).
-- **Icons**: FontAwesome.
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript (Fast & Lightweight).
+- **Backend**: Node.js, Express.js (Scalable API).
+- **Security**: JWT & Bcrypt (Industry standard auth).
+- **Database**: Local JSON Storage (Zero-config deployment).
 
-## 🚀 How to Run
-1.  **Install Dependencies**
-    ```bash
-    npm install
-    ```
-
-2.  **Start the Server**
-    ```bash
-    npm start
-    ```
-
-3.  **Open the App**
-    Visit [http://localhost:3000](http://localhost:3000) in your browser.
-    - Use the **Add Task** form to schedule a class or task.
-    - View your tasks in the **Task List**.
-    - Click **"View Timetable"** to see a clean table of today's schedule.
-
-## 📋 Usage Guide
-1.  **Login**: Enter any username to create an account or log in.
-2.  **Dashboard**:
-3.  **Reminders**: Keep the tab open to receive audio/visual alerts at the scheduled time.
-
-## 📱 Future Updates
-- Mobile App / PWA Support.
-- Email Integration.
-- Student Attendance Tracking.
+## 🚀 Getting Started
+1. **Install Dependencies**: `npm install`
+2. **Launch Application**: `npm start`
+3. **Access App**: [http://localhost:3000](http://localhost:3000)
 
 ---
-*Built for Teachers, by Developers.*
+*Empowering users to achieve more, one task at a time.*

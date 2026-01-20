@@ -2,7 +2,7 @@
 // Usage: include this script and call initGreeting({ selector: '#greeting', name: 'Vignesh' })
 (function () {
     const greetings = {
-        morning: ['Good morning', 'Morning, bright teacher', 'Top of the morning!'],
+        morning: ['Good morning', 'Good morning!', 'Top of the morning!'],
         afternoon: ['Good afternoon', 'Hope your afternoon is going well', 'Good day!'],
         evening: ['Good evening', 'Hope you had a great day', 'Good evening, relax!']
     };
@@ -43,7 +43,7 @@
     }
 
     // Export to global
-    window.TeacherUI = window.TeacherUI || {};
-    window.TeacherUI.initGreeting = initGreeting;
-    window.TeacherUI.getCheer = getCheer;
+    window.AppUI = window.AppUI || {};
+    window.AppUI.initGreeting = initGreeting;
+    window.AppUI.getCheer = getCheer;
 })(); 

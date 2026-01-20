@@ -1,22 +1,55 @@
 const API_URL = 'http://localhost:3000/api';
 const user = JSON.parse(localStorage.getItem('user'));
-window.APP = { user: { name: user ? user.username : 'Teacher' } };
+window.APP = { user: { name: user ? user.username : 'Task Scheduler' } };
 
 if (!user) {
     window.location.href = 'index.html';
 }
 
-if (window.TeacherUI) {
-    window.TeacherUI.initGreeting({ selector: '#welcomeMsg', name: user.username });
+// --- State Management ---
+let allTasks = [];
+
+if (window.AppUI) {
+    window.AppUI.initGreeting({ selector: '#welcomeMsg', name: user.username });
 } else {
-    document.getElementById('welcomeMsg').innerText = `Welcome, ${user.username}`;
+    const welcome = document.getElementById('welcomeMsg');
+    if (welcome) welcome.innerText = `Welcome, ${user.username}`;
 }
-document.getElementById('taskDate').valueAsDate = new Date(); // Default to today
 
-// Load Tasks on start
+// Set Role-based UI
+const roleBadge = document.getElementById('roleBadge');
+const greetingEl = document.getElementById('greeting');
+if (greetingEl) greetingEl.innerText = `Hi, ${user.username}`;
+
+if (roleBadge) {
+    roleBadge.innerText = user.role || 'User';
+    const addTaskTitle = document.querySelector('.add-task-card h2');
+    if (addTaskTitle) {
+        if (user.role === 'student') {
+            addTaskTitle.innerHTML = '<i class="fas fa-book"></i> Add Study Task';
+            const hub = document.getElementById('studentHub');
+            if (hub) {
+                hub.style.display = 'block';
+                initStudentHub();
+            }
+        } else if (user.role === 'teacher') {
+            addTaskTitle.innerHTML = '<i class="fas fa-chalkboard"></i> Add Class/Task';
+            const suite = document.getElementById('teacherSuite');
+            if (suite) {
+                suite.style.display = 'block';
+                loadClasses();
+            }
+        } else {
+            addTaskTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Add New Task';
+        }
+    }
+}
+
+// Load initial data
 loadTasks();
+loadHabits();
 
-// Digital Clock (only if element exists)
+// Digital Clock
 const clockEl = document.getElementById('clock');
 setInterval(() => {
     const now = new Date();
@@ -24,7 +57,6 @@ setInterval(() => {
     checkReminders();
 }, 1000);
 
-const isTimetablePage = window.location.pathname.includes('timetable.html');
 const addTaskForm = document.getElementById('addTaskForm');
 const taskDateInput = document.getElementById('taskDate');
 
@@ -40,16 +72,23 @@ if (addTaskForm) {
         const description = document.getElementById('taskDesc').value;
         const date = document.getElementById('taskDate').value;
         const time = document.getElementById('taskTime').value;
+        const category = document.getElementById('taskCategory').value;
+        const priority = document.getElementById('taskPriority').value;
 
         const newTask = {
             title,
             description,
             date,
             time,
+            category,
+            priority,
             userId: user.id
         };
 
         try {
+            // Optimistic update for immediate feedback
+            showNotification(`Saving...`);
+
             const res = await fetch(`${API_URL}/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -57,13 +96,19 @@ if (addTaskForm) {
             });
 
             if (res.ok) {
+                const addedTask = await res.json();
                 addTaskForm.reset();
                 if (taskDateInput) taskDateInput.valueAsDate = new Date();
-                loadTasks();
+
+                // Fast Local Update
+                allTasks.push(addedTask);
+                renderTasks(allTasks); handleStreak();
+
                 showNotification(`Task "${title}" added!`);
             }
         } catch (err) {
             console.error(err);
+            showNotification('Error saving task');
         }
     });
 }
@@ -73,8 +118,8 @@ if (addTaskForm) {
 async function loadTasks() {
     try {
         const res = await fetch(`${API_URL}/tasks?userId=${user.id}`);
-        const tasks = await res.json();
-        renderTasks(tasks);
+        allTasks = await res.json();
+        renderTasks(allTasks); handleStreak();
     } catch (err) {
         console.error(err);
     }
@@ -82,45 +127,107 @@ async function loadTasks() {
 
 function renderTasks(tasks) {
     const list = document.getElementById('taskList');
-    if (!list) return; // Not on dashboard
+    if (!list) return;
 
     list.innerHTML = '';
-
     if (tasks.length === 0) {
-        list.innerHTML = `<div style="text-align: center; color: #aaa; padding: 2rem;">No tasks yet. Add one to get started!</div>`;
+        list.innerHTML = `<div style="text-align: center; color: #aaa; padding: 2rem;">No tasks yet.</div>`;
         return;
     }
 
     // Sort by Date/Time
-    tasks.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+    const sorted = [...tasks].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
 
-    tasks.forEach(task => {
+    sorted.forEach(task => {
         const el = document.createElement('div');
         el.className = `task-item ${task.status === 'Done' ? 'completed' : ''}`;
+        const priorityClass = `priority-${task.priority?.toLowerCase() || 'medium'}`;
+
         el.innerHTML = `
-            <div class="task-content">
-                <h3 class="task-title">${task.title}</h3>
-                <div class="task-meta">
-                    <span><i class="far fa-calendar"></i> ${task.date}</span>
-                    <span><i class="far fa-clock"></i> ${task.time}</span>
-                    ${task.description ? `<span><i class="fas fa-align-left"></i> ${task.description}</span>` : ''}
+                <div class="task-content">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                        <h3 class="task-title" style="margin:0;">${task.title}</h3>
+                        <span class="badge ${priorityClass}">${task.priority || 'Medium'}</span>
+                        <span class="badge category-badge">${task.category || 'General'}</span>
+                    </div>
+                    <div class="task-meta">
+                        <span><i class="far fa-calendar"></i> ${task.date}</span>
+                        <span><i class="far fa-clock"></i> ${task.time}</span>
+                        ${task.description ? `<span><i class="fas fa-align-left"></i> ${task.description}</span>` : ''}
+                    </div>
                 </div>
-            </div>
-            <div class="task-actions">
-                ${task.status !== 'Done' ? `
-                <button class="btn-icon btn-check" onclick="markDone('${task.id}')" title="Mark Done">
-                    <i class="fas fa-check"></i>
-                </button>` : ''}
-                <button class="btn-icon btn-delete" onclick="deleteTask('${task.id}')" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `;
+                <div class="task-actions">
+                    ${task.status !== 'Done' ? `
+                    <button class="btn-icon btn-check" onclick="markDone('${task.id}')" title="Mark Done">
+                        <i class="fas fa-check"></i>
+                    </button>` : ''}
+                    <button class="btn-icon btn-delete" onclick="deleteTask('${task.id}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
         list.appendChild(el);
     });
 
-    // Also update Timetable widget on dashboard if it exists
-    renderTimetable(tasks);
+    renderTimetable(sorted);
+    renderSpatialTimeline(sorted);
+}
+
+function setView(view) {
+    const list = document.getElementById('taskList');
+    const spatial = document.getElementById('spatialView');
+    const listBtn = document.getElementById('listBtn');
+    const spatialBtn = document.getElementById('spatialBtn');
+    if (!list || !spatial) return;
+
+    if (view === 'spatial') {
+        list.style.display = 'none';
+        spatial.style.display = 'block';
+        spatialBtn.style.background = 'var(--primary)';
+        spatialBtn.style.color = 'white';
+        listBtn.style.background = 'transparent';
+        listBtn.style.color = 'var(--text-main)';
+    } else {
+        list.style.display = 'flex';
+        spatial.style.display = 'none';
+        listBtn.style.background = 'var(--primary)';
+        listBtn.style.color = 'white';
+        spatialBtn.style.background = 'transparent';
+        spatialBtn.style.color = 'var(--text-main)';
+    }
+}
+
+function renderSpatialTimeline(tasks) {
+    const container = document.getElementById('spatialTimeline');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const sorted = [...tasks].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+
+    sorted.forEach((task, index) => {
+        const card = document.createElement('div');
+        card.className = 'timeline-card';
+        card.style.transform = `translateZ(${index * 20}px)`;
+        const priorityClass = `priority-${task.priority?.toLowerCase() || 'medium'}`;
+
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <h3 style="margin:0; font-size:1.2rem;">${task.title}</h3>
+                    <p style="margin:5px 0; font-size:0.9rem; color:var(--text-secondary);">${task.description || ''}</p>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <span class="badge ${priorityClass}">${task.priority}</span>
+                        <span class="badge category-badge">${task.category}</span>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-weight:800; color:var(--primary-solid);">${task.time}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${task.date}</div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
 }
 
 async function markDone(id) {
@@ -132,100 +239,71 @@ async function markDone(id) {
         });
 
         if (res.ok) {
-            // Play success sound
+            const updated = await res.json();
+            const idx = allTasks.findIndex(t => t.id === id);
+            if (idx !== -1) allTasks[idx] = updated;
+
+            renderTasks(allTasks); handleStreak();
+
+            // FX
             const sound = document.getElementById('successSound');
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.log('Sound play blocked:', e));
-            }
+            if (sound) { sound.currentTime = 0; sound.play().catch(() => { }); }
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 
-            // Trigger Confetti Burst
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#6366f1', '#a855f7', '#ec4899']
-            });
-
-            // Show Cheer
-            if (window.TeacherUI) {
-                showNotification(window.TeacherUI.getCheer());
-            }
-
-            // Remind about the next class
             remindNextClass(id);
-
-            loadTasks();
         }
     } catch (err) {
-        console.error('Error marking task as done:', err);
+        console.error(err);
     }
 }
 
 async function remindNextClass(completedId) {
-    try {
-        const res = await fetch(`${API_URL}/tasks?userId=${user.id}`);
-        const tasks = await res.json();
+    const today = new Date().toISOString().split('T')[0];
+    const todaysTasks = allTasks.filter(t => t.date === today).sort((a, b) => a.time.localeCompare(b.time));
+    const currentIndex = todaysTasks.findIndex(t => t.id === completedId);
+    const nextTask = todaysTasks.slice(currentIndex + 1).find(t => t.status !== 'Done');
 
-        const today = new Date().toISOString().split('T')[0];
-        const todaysTasks = tasks.filter(t => t.date === today)
-            .sort((a, b) => a.time.localeCompare(b.time));
-
-        const currentIndex = todaysTasks.findIndex(t => t.id === completedId);
-        const nextTask = todaysTasks.slice(currentIndex + 1).find(t => t.status !== 'Done');
-
-        if (nextTask) {
-            // Instant feedback alert
-            setTimeout(() => {
-                alert(`✅ Task Completed!\n\nYour NEXT class is: "${nextTask.title}"\nStarting at: ${nextTask.time}\n\nDon't forget to prepare!`);
-            }, 800);
-        } else {
-            setTimeout(() => {
-                alert(`🎉 Great work! You have finished all your scheduled classes for today.`);
-            }, 800);
-        }
-
-        // Update the visual banner immediately
-        updateNextClassHighlight(todaysTasks);
-    } catch (err) {
-        console.log('Error reminding next class', err);
+    if (nextTask) {
+        setTimeout(() => {
+            alert(`✅ Done! NEXT: "${nextTask.title}" at ${nextTask.time}`);
+        }, 800);
     }
 }
 
 async function deleteTask(id) {
     if (!confirm('Are you sure?')) return;
-    await fetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' });
-    loadTasks();
+    try {
+        const res = await fetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            allTasks = allTasks.filter(t => t.id !== id);
+            renderTasks(allTasks); handleStreak();
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 function renderTimetable(tasks) {
     const tbody = document.getElementById('timetableBody');
     if (!tbody) return;
-
     tbody.innerHTML = '';
 
-    // Filter for TODAY only
     const today = new Date().toISOString().split('T')[0];
-    const todaysTasks = tasks.filter(t => t.date === today);
-
-    // Sort by time
-    todaysTasks.sort((a, b) => a.time.localeCompare(b.time));
+    const todaysTasks = tasks.filter(t => t.date === today).sort((a, b) => a.time.localeCompare(b.time));
 
     updateNextClassHighlight(todaysTasks);
 
     if (todaysTasks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">No tasks scheduled for today.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">Free day!</td></tr>`;
         return;
     }
 
     todaysTasks.forEach(t => {
         const row = document.createElement('tr');
-        const statusClass = t.status === 'Done' ? 'status-done' : 'status-pending';
-
         row.innerHTML = `
-            <td><strong>${t.time}</strong></td>
-            <td>${t.title} ${t.description ? `<br><small style="color:#777;">${t.description}</small>` : ''}</td>
-            <td><span class="status-badge ${statusClass}">${t.status}</span></td>
+            <td style="padding:15px;"><strong>${t.time}</strong></td>
+            <td style="padding:15px;">${t.title}</td>
+            <td style="padding:15px;"><span class="badge ${t.status === 'Done' ? 'priority-low' : 'priority-medium'}">${t.status}</span></td>
         `;
         tbody.appendChild(row);
     });
@@ -237,200 +315,253 @@ function updateNextClassHighlight(todaysTasks) {
     if (!nextClassAlert || !nextClassText) return;
 
     const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const current = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const next = todaysTasks.find(t => t.status !== 'Done' && t.time >= current);
 
-    const nextTask = todaysTasks.find(t => t.status !== 'Done' && t.time >= currentTime);
-
-    if (nextTask) {
+    if (next) {
         nextClassAlert.style.display = 'flex';
-        nextClassText.innerText = `${nextTask.title} at ${nextTask.time}`;
+        nextClassText.innerText = `${next.title} at ${next.time}`;
     } else {
         nextClassAlert.style.display = 'none';
     }
 }
 
-function printTimetable() {
-    const printContent = document.querySelector('.timetable-container').innerHTML;
-    const originalContent = document.body.innerHTML;
-
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Daily Timetable</title>');
-    printWindow.document.write('<style>body{font-family: sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ddd; padding:8px; text-align:left;} th{background:#eee;}</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Today\'s Timetable</h1>');
-    printWindow.document.write(printContent);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
-}
+function printTimetable() { window.print(); }
 
 function logout() {
     localStorage.removeItem('user');
     window.location.href = 'index.html';
 }
 
-// --- Reminders ---
-let metrics = {
-    lastCheck: 0
-};
-
 function checkReminders() {
-    // Check every minute or so strictly, but for demo we check every second against the minute
     const now = new Date();
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    const currentDate = now.toISOString().split('T')[0];
+    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const date = now.toISOString().split('T')[0];
 
-    // Prevent multiple alerts in the same minute
-    if (metrics.lastCheck === currentTime) return;
+    // 1. Task Due Now
+    const due = allTasks.find(t => t.date === date && t.time === time && t.status !== 'Done');
+    if (due && window.lastReminder !== time) {
+        window.lastReminder = time;
+        triggerUrgentAlert(due);
+    }
 
-    // We need to fetch tasks (or use cached ones). For simplicity let's peek at the DOM or re-fetch. 
-    // Ideally we store tasks in a global variable.
-    // Let's implement a global fetch for purity.
-    fetch(`${API_URL}/tasks?userId=${user.id}`)
-        .then(res => res.json())
-        .then(tasks => {
-            const dueTasks = tasks.filter(t =>
-                t.date === currentDate &&
-                t.time === currentTime &&
-                t.status !== 'Done'
-            );
+    // 2. Deadline Risk (15 mins warning)
+    const riskTime = new Date(now.getTime() + 15 * 60000);
+    const riskStr = `${riskTime.getHours().toString().padStart(2, '0')}:${riskTime.getMinutes().toString().padStart(2, '0')}`;
+    const risky = allTasks.find(t => t.date === date && t.time === riskStr && t.status !== 'Done');
+    if (risky && window.lastRisk !== riskStr) {
+        window.lastRisk = riskStr;
+        showNotification(`⚠️ RISK: "${risky.title}" due in 15 mins!`);
+    }
+}
 
-            if (dueTasks.length > 0) {
-                metrics.lastCheck = currentTime;
-                dueTasks.forEach(t => {
-                    const audio = document.getElementById('notifySound');
-                    audio.play().catch(e => console.log('Audio play failed (interaction needed first)'));
+function triggerUrgentAlert(task) {
+    const isHigh = task.priority === 'High';
+    const audio = document.getElementById('notifySound');
+    if (audio) audio.play().catch(() => { });
 
-                    // Simple Browser Notification
-                    if (Notification.permission === "granted") {
-                        new Notification(`Task Reminder: ${t.title}`, { body: t.description || "It's time!" });
-                    } else if (Notification.permission !== "denied") {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === "granted") {
-                                new Notification(`Task Reminder: ${t.title}`, { body: t.description || "It's time!" });
-                            }
-                        });
-                    }
+    if (isHigh) {
+        const pulse = document.createElement('div');
+        pulse.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(239,68,68,0.25); z-index:10000; pointer-events:none; animation: pulse 1s infinite;";
+        document.body.appendChild(pulse);
+        setTimeout(() => pulse.remove(), 5000);
+    }
 
-                    alert(`🔔 Reminder: ${t.title}\nTime to do this task!`);
-                });
-            }
-        });
+    alert(`${isHigh ? '🚨 URGENT: ' : '🔔 '} ${task.title}\nStarts now!`);
 }
 
 function showNotification(msg) {
-    // Show a simple toast-like alert if it's a cheer
     const toast = document.createElement('div');
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.right = '20px';
-    toast.style.background = 'var(--primary)';
-    toast.style.color = 'white';
-    toast.style.padding = '12px 24px';
-    toast.style.borderRadius = '8px';
-    toast.style.boxShadow = 'var(--shadow)';
-    toast.style.zIndex = '1000';
-    toast.style.animation = 'fadeIn 0.5s ease-out';
+    toast.style = "position:fixed; bottom:20px; right:20px; background:var(--primary); color:white; padding:12px 24px; border-radius:30px; z-index:9999; box-shadow:var(--shadow);";
     toast.textContent = msg;
     document.body.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.5s ease-in';
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
+    setTimeout(() => toast.remove(), 3000);
 }
 
-// Request notification permission on load
-if (Notification.permission !== "denied") {
-    Notification.requestPermission();
+// Teacher Functions
+async function loadClasses() {
+    const res = await fetch(`${API_URL}/classes?userId=${user.id}`);
+    renderClasses(await res.json());
+}
+function renderClasses(classes) {
+    const list = document.getElementById('classList');
+    if (!list) return;
+    list.innerHTML = '';
+    classes.forEach(c => {
+        const el = document.createElement('span');
+        el.className = 'badge category-badge';
+        el.innerHTML = `${c.name} <i class="fas fa-times" onclick="deleteClass('${c.id}')"></i>`;
+        list.appendChild(el);
+    });
+}
+async function addClass() {
+    const name = document.getElementById('newClassName').value;
+    if (!name) return;
+    await fetch(`${API_URL}/classes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, userId: user.id })
+    });
+    document.getElementById('newClassName').value = '';
+    loadClasses();
+}
+async function deleteClass(id) {
+    if (!confirm('Delete class?')) return;
+    await fetch(`${API_URL}/classes/${id}`, { method: 'DELETE' });
+    loadClasses();
 }
 
-// --- Study Timer Logic ---
-let studyInterval;
-let timeLeft;
-let isStudying = true;
-let isTimerRunning = false;
+async function aiPlanner() {
+    const topic = prompt("Enter a subject or topic for the lesson plan (e.g. Quantum Physics):");
+    if (!topic) return;
 
-function toggleStudyTimer() {
-    const startBtn = document.getElementById('startStudyBtn');
-    const resetBtn = document.getElementById('resetStudyBtn');
-    const label = document.getElementById('timerLabel');
-    const studyMins = parseInt(document.getElementById('studyMins').value) || 25;
-    const breakMins = parseInt(document.getElementById('breakMins').value) || 5;
+    showNotification("AI is generating your lesson plan...");
 
-    if (!isTimerRunning) {
-        // Start or Resume
-        if (!timeLeft) {
-            timeLeft = studyMins * 60;
-            isStudying = true;
-            label.innerText = "Focus Time";
-            label.style.color = "var(--secondary)";
-        }
+    // Simulating AI generation
+    const subtasks = [
+        { title: `[AI] Intro to ${topic}`, desc: "Overview and basic concepts", priority: "Medium" },
+        { title: `[AI] ${topic} Deep Dive`, desc: "In-depth analysis and examples", priority: "High" },
+        { title: `[AI] ${topic} Assessment`, desc: "Review quiz and feedback", priority: "Low" }
+    ];
 
-        isTimerRunning = true;
-        startBtn.innerHTML = '<i class="fas fa-pause"></i> Pause Session';
-        resetBtn.style.display = 'block';
+    const today = new Date();
 
-        studyInterval = setInterval(() => {
-            timeLeft--;
-            displayTimer();
+    for (let i = 0; i < subtasks.length; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const task = {
+            title: subtasks[i].title,
+            description: subtasks[i].desc,
+            date: d.toISOString().split('T')[0],
+            time: "09:00",
+            category: "Work",
+            priority: subtasks[i].priority,
+            userId: user.id
+        };
 
-            if (timeLeft <= 0) {
-                clearInterval(studyInterval);
-                isTimerRunning = false;
+        await fetch(`${API_URL}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(task)
+        });
+    }
 
-                // Switch phase
-                const audio = document.getElementById('notifySound');
-                audio.play().catch(e => console.log('Audio blocked'));
+    showNotification("Generated 3-day lesson plan!");
+    loadTasks();
+}
 
-                if (isStudying) {
-                    alert("Focus session complete! Time for a break.");
-                    timeLeft = breakMins * 60;
-                    isStudying = false;
-                    label.innerText = "Break Time";
-                    label.style.color = "#2ecc71";
-                } else {
-                    alert("Break over! Ready to focus again?");
-                    timeLeft = studyMins * 60;
-                    isStudying = true;
-                    label.innerText = "Focus Time";
-                    label.style.color = "var(--secondary)";
-                }
+// Student Hub
+function initStudentHub() {
+    const streak = localStorage.getItem('streak') || 0;
+    const streakEl = document.getElementById('streakCounter');
+    if (streakEl) streakEl.innerText = `${streak} Days`;
 
-                toggleStudyTimer(); // Automatically start next phase
+    let pomoTime = 25 * 60;
+    let pomoInterval = null;
+    const display = document.getElementById('pomodoroTimer');
+    const startBtn = document.getElementById('startPomodoro');
+    const resetBtn = document.getElementById('resetPomodoro');
+
+    if (startBtn) {
+        startBtn.onclick = () => {
+            if (pomoInterval) {
+                clearInterval(pomoInterval);
+                pomoInterval = null;
+                startBtn.innerText = 'Start';
+            } else {
+                pomoInterval = setInterval(() => {
+                    pomoTime--;
+                    const m = Math.floor(pomoTime / 60);
+                    const s = pomoTime % 60;
+                    if (display) display.innerText = `${m}:${s.toString().padStart(2, '0')}`;
+                    if (pomoTime <= 0) { clearInterval(pomoInterval); alert('Break time!'); }
+                }, 1000);
+                startBtn.innerText = 'Pause';
             }
-        }, 1000);
-    } else {
-        // Pause
-        clearInterval(studyInterval);
-        isTimerRunning = false;
-        startBtn.innerHTML = '<i class="fas fa-play"></i> Resume Session';
+        };
+    }
+    if (resetBtn) {
+        resetBtn.onclick = () => {
+            clearInterval(pomoInterval);
+            pomoInterval = null;
+            pomoTime = 25 * 60;
+            if (display) display.innerText = "25:00";
+            if (startBtn) startBtn.innerText = "Start";
+        };
     }
 }
 
-function resetStudyTimer() {
-    clearInterval(studyInterval);
-    isTimerRunning = false;
-    timeLeft = null;
-    isStudying = true;
-
-    document.getElementById('startStudyBtn').innerHTML = '<i class="fas fa-play"></i> Start Session';
-    document.getElementById('resetStudyBtn').style.display = 'none';
-    document.getElementById('timerLabel').innerText = 'Ready';
-    document.getElementById('timerLabel').style.color = 'var(--text-muted)';
-    document.getElementById('timerTime').innerText = document.getElementById('studyMins').value + ':00';
+// Habits
+async function loadHabits() {
+    const res = await fetch(`${API_URL}/habits?userId=${user.id}`);
+    renderHabits(await res.json());
+}
+function renderHabits(habits) {
+    const list = document.getElementById('habitList');
+    if (!list) return;
+    list.innerHTML = '';
+    habits.forEach(h => {
+        const el = document.createElement('div');
+        el.style = "display:flex; justify-content:space-between; margin:5px 0;";
+        el.innerHTML = `<span>${h.name}</span> <i class="fas fa-trash" onclick="deleteHabit('${h.id}')"></i>`;
+        list.appendChild(el);
+    });
+}
+async function addHabit() {
+    const name = document.getElementById('newHabitName').value;
+    if (!name) return;
+    await fetch(`${API_URL}/habits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, userId: user.id })
+    });
+    document.getElementById('newHabitName').value = '';
+    loadHabits();
+}
+async function deleteHabit(id) {
+    await fetch(`${API_URL}/habits/${id}`, { method: 'DELETE' });
+    loadHabits();
 }
 
-function displayTimer() {
-    const mins = Math.floor(timeLeft / 60);
-    const secs = timeLeft % 60;
-    document.getElementById('timerTime').innerText =
-        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-// Update display when inputs change
-document.getElementById('studyMins').addEventListener('input', (e) => {
-    if (!isTimerRunning && !timeLeft) {
-        document.getElementById('timerTime').innerText = e.target.value + ':00';
+async function aiPlanner() {
+    const topic = prompt("Enter a subject or topic for the lesson plan (e.g. Quantum Physics):");
+    if (!topic) return;
+    showNotification("AI is generating your lesson plan...");
+    const subtasks = [
+        { title: `[AI] Intro to ${topic}`, desc: "Overview and basic concepts", priority: "Medium" },
+        { title: `[AI] ${topic} Deep Dive`, desc: "In-depth analysis and examples", priority: "High" },
+        { title: `[AI] ${topic} Assessment`, desc: "Review quiz and feedback", priority: "Low" }
+    ];
+    const today = new Date();
+    for(let i=0; i<subtasks.length; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const task = {
+            title: subtasks[i].title, description: subtasks[i].desc,
+            date: d.toISOString().split('T')[0], time: "09:00",
+            category: "Work", priority: subtasks[i].priority, userId: user.id
+        };
+        await fetch(`${API_URL}/tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(task)
+        });
     }
-});
+    showNotification("Generated 3-day lesson plan!");
+    loadTasks();
+}
+
+function handleStreak() {
+    const lastDone = localStorage.getItem('lastDoneDate');
+    const today = new Date().toISOString().split('T')[0];
+    if (lastDone !== today) {
+        let streak = parseInt(localStorage.getItem('streak') || '0');
+        streak++;
+        localStorage.setItem('streak', streak.toString());
+        localStorage.setItem('lastDoneDate', today);
+        const streakEl = document.getElementById('streakCounter');
+        if (streakEl) streakEl.innerText = `${streak} Days`;
+        showNotification(` Streak updated: ${streak} Days!`);
+    }
+}
+

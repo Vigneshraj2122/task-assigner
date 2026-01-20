@@ -3,7 +3,7 @@
     function getGreetingName() {
         const user = JSON.parse(localStorage.getItem('user'));
         if (user && user.username) return user.username;
-        return localStorage.getItem('teacherName') || 'Teacher';
+        return localStorage.getItem('userName') || 'Task Scheduler';
     }
 
     function getGreetingText(date = new Date()) {
@@ -23,7 +23,7 @@
     }
 
     window.setGreetingName = function (name) {
-        localStorage.setItem('teacherName', name);
+        localStorage.setItem('userName', name);
         renderGreeting();
     };
 
