@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Report | Task Scheduler</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="dashboard-body">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-calendar-check"></i>
+            <span>Task Scheduler</span>
+        </div>
+        <nav style="display: flex; gap: 1.5rem; margin-left: 2rem;">
+            <a href="dashboard.html" style="text-decoration: none; color: var(--text-secondary, #666);">Home</a>
+            <a href="calendar.html" style="text-decoration: none; color: var(--text-secondary, #666);">Calendar</a>
+            <a href="timetable.html" style="text-decoration: none; color: var(--text-secondary, #666);">Timetable</a>
+            <a href="report.html"
+                style="text-decoration: none; color: var(--primary-solid); font-weight: 800;">Report</a>
+        </nav>
+        <div class="user-info">
+            <div id="roleBadge"
+                style="background: var(--secondary); color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-right: 10px;">
+                User</div>
+            <div id="greeting" class="greeting"
+                style="margin-right: 15px; font-weight: 600; color: var(--primary-solid);"></div>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"
+                style="width: auto; padding: 8px 12px; margin-right: 10px;">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="secondary" onclick="logout()" style="width: auto; padding: 8px 16px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container" style="grid-template-columns: 1fr;">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+                <h1><i class="fas fa-chart-line"></i> Weekly Productivity Report</h1>
+                <button class="secondary" onclick="window.print()" style="width:auto;"> <i class="fas fa-download"></i>
+                    Export PDF</button>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="card" style="background: var(--primary); color: white; border: none;">
+                    <h3 style="margin:0; opacity: 0.8; font-size: 0.9rem;">Tasks Completed</h3>
+                    <div id="completedCount" style="font-size: 2.5rem; font-weight: 800;">0</div>
+                </div>
+                <div class="card" style="background: var(--secondary); color: white; border: none;">
+                    <h3 style="margin:0; opacity: 0.8; font-size: 0.9rem;">Completion Rate</h3>
+                    <div id="completionRate" style="font-size: 2.5rem; font-weight: 800;">0%</div>
+                </div>
+                <div class="card" style="background: var(--accent); color: white; border: none;">
+                    <h3 style="margin:0; opacity: 0.8; font-size: 0.9rem;">Current Streak</h3>
+                    <div id="currentStreak" style="font-size: 2.5rem; font-weight: 800;">0</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="card">
+                    <h3>Tasks by Category</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="card">
+                    <h3>7-Day Activity</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/report.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

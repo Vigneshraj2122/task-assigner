@@ -23,6 +23,7 @@
             <a href="calendar.html"
                 style="text-decoration: none; color: var(--primary-solid); font-weight: 800;">Calendar</a>
             <a href="timetable.html" style="text-decoration: none; color: var(--text-secondary, #666);">Timetable</a>
+            <a href="report.html" style="text-decoration: none; color: var(--text-secondary, #666);">Report</a>
         </nav>
         <div class="user-info">
             <div id="roleBadge"
@@ -73,8 +74,9 @@
         </div>
     </div>
 
-    
-    <div id="holidayModal" class="card" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000; width:400px; background:var(--bg-card); backdrop-filter:blur(20px);">
+
+    <div id="holidayModal" class="card"
+        style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000; width:400px; background:var(--bg-card); backdrop-filter:blur(20px);">
         <h3><i class="fas fa-umbrella-beach"></i> Add Holiday</h3>
         <label>Holiday Name</label>
         <input type="text" id="holidayName" placeholder="e.g. Summer Break">
@@ -85,8 +87,10 @@
             <button class="secondary" onclick="closeHolidayModal()">Cancel</button>
         </div>
     </div>
-    <div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999;" onclick="closeHolidayModal()"></div>
-<script src="js/theme.js"></script>
+    <div id="modalOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999;"
+        onclick="closeHolidayModal()"></div>
+    <script src="js/theme.js"></script>
     <script src="js/calendar.js"></script>
     <script>
         // Use standard logout from app.js logic if needed, or define here

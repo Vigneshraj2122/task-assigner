@@ -23,6 +23,7 @@
                 style="text-decoration: none; color: var(--primary-solid); font-weight: 800;">Home</a>
             <a href="calendar.html" style="text-decoration: none; color: var(--text-secondary, #666);">Calendar</a>
             <a href="timetable.html" style="text-decoration: none; color: var(--text-secondary, #666);">Timetable</a>
+            <a href="report.html" style="text-decoration: none; color: var(--text-secondary, #666);">Report</a>
         </nav>
         <div class="user-info">
             <div id="roleBadge"
@@ -44,45 +45,80 @@
     <div class="container">
 
         <div id="sideBar">
-        <!-- Habit Tracker (General) -->
-        <div id="habitTracker" class="card" style="margin-top:2rem; border-top: 4px solid var(--primary-solid);">
-            <h2><i class="fas fa-redo"></i> Habit Tracker</h2>
-            <div id="habitList">
-                <!-- Habits will be injected here -->
+            <div id="aiInsightsCard" class="card" style="margin-top:0rem; border-top: 4px solid var(--primary-solid);">
+                <h2><i class="fas fa-robot"></i> AI Suggestions</h2>
+                <div id="aiInsights">
+                    <div style="text-align: center; color: var(--text-muted); padding: 10px;">
+                        <i class="fas fa-spinner fa-spin"></i> Analyzing...
+                    </div>
+                </div>
             </div>
-            <div style="display:flex; gap:5px; margin-top:15px;">
-                <input type="text" id="newHabitName" placeholder="e.g. Drink Water" style="margin:0;">
-                <button onclick="addHabit()" style="width:auto; padding:0 15px;"><i class="fas fa-plus"></i></button>
-            </div>
-        </div>
-        <!-- Student Hub (Only visible to students) -->
-        <div id="studentHub" class="card" style="display:none; margin-top:2rem; border-top: 4px solid var(--secondary-solid);">
-            <h2><i class="fas fa-user-graduate"></i> Student Hub</h2>
-            
-            <div style="background: var(--hover-bg); padding: 1rem; border-radius: 15px; margin-bottom: 1.5rem; text-align: center;">
-                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Current Streak</div>
-                <div id="streakCounter" style="font-size: 2.5rem; font-weight: 800; color: var(--secondary-solid);">0 Days</div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary);">Keep it up! </div>
-            </div>
-
-            <div style="margin-bottom:1.5rem;">
-                <label>Focus Mode (Pomodoro)</label>
-                <div id="pomodoroTimer" style="font-size: 2rem; font-weight: 800; text-align: center; margin: 10px 0; font-family: monospace; color: var(--primary-solid);">25:00</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <button id="startPomodoro" class="secondary" style="font-size: 0.8rem;"><i class="fas fa-play"></i> Start</button>
-                    <button id="resetPomodoro" class="secondary" style="font-size: 0.8rem;"><i class="fas fa-undo"></i> Reset</button>
+            <!-- Habit Tracker (General) -->
+            <div id="habitTracker" class="card" style="margin-top:2rem; border-top: 4px solid var(--primary-solid);">
+                <h2><i class="fas fa-redo"></i> Habit Tracker</h2>
+                <div id="habitList">
+                    <!-- Habits will be injected here -->
+                </div>
+                <div style="display:flex; gap:5px; margin-top:15px;">
+                    <input type="text" id="newHabitName" placeholder="e.g. Drink Water" style="margin:0;">
+                    <button onclick="addHabit()" style="width:auto; padding:0 15px;"><i
+                            class="fas fa-plus"></i></button>
                 </div>
             </div>
 
-            <div style="border-top:1px solid var(--border-color); padding-top:1rem;">
-                <label>Badges Unlocked</label>
-                <div id="badgeGrid" style="display:flex; gap:10px; margin-top:10px; overflow-x: auto; padding-bottom:10px;">
-                    <i class="fas fa-award fa-2x" style="color: #ffd700;" title="Early Bird"></i>
-                    <i class="fas fa-fire fa-2x" style="color: #ff4500;" title="On Fire"></i>
-                    <i class="fas fa-check-double fa-2x" style="color: #6366f1;" title="Consistency King"></i>
+            <!-- Productivity Tools (Global) -->
+            <div class="card" style="margin-top:2rem; border-top: 4px solid var(--accent-solid);">
+                <h2><i class="fas fa-tools"></i> Productivity Tools</h2>
+
+                <div style="margin-bottom:1.5rem;">
+                    <label><i class="fas fa-stopwatch"></i> Pomodoro Timer</label>
+                    <div id="pomodoroTimer"
+                        style="font-size: 2rem; font-weight: 800; text-align: center; margin: 10px 0; font-family: monospace; color: var(--primary-solid);">
+                        25:00</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button id="startPomodoro" class="secondary" style="font-size: 0.8rem;"><i
+                                class="fas fa-play"></i> Start</button>
+                        <button id="resetPomodoro" class="secondary" style="font-size: 0.8rem;"><i
+                                class="fas fa-undo"></i> Reset</button>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid var(--border-color); padding-top:1rem;">
+                    <label><i class="fas fa-cloud-upload-alt"></i> Cloud Sync & Backup</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                        <button onclick="exportData()" class="secondary" style="font-size: 0.75rem;"><i
+                                class="fas fa-download"></i> Backup</button>
+                        <button onclick="importDataPrompt()" class="secondary" style="font-size: 0.75rem;"><i
+                                class="fas fa-upload"></i> Restore</button>
+                    </div>
+                    <input type="file" id="importFile" style="display:none" onchange="handleImport(event)">
                 </div>
             </div>
-        </div>
+            <!-- Student Hub (Only visible to students) -->
+            <div id="studentHub" class="card"
+                style="display:none; margin-top:2rem; border-top: 4px solid var(--secondary-solid);">
+                <h2><i class="fas fa-user-graduate"></i> Student Hub</h2>
+
+                <div
+                    style="background: var(--hover-bg); padding: 1rem; border-radius: 15px; margin-bottom: 1.5rem; text-align: center;">
+                    <div
+                        style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                        Current Streak</div>
+                    <div id="streakCounter" style="font-size: 2.5rem; font-weight: 800; color: var(--secondary-solid);">
+                        0 Days</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Keep it up! </div>
+                </div>
+
+                <div style="border-top:1px solid var(--border-color); padding-top:1rem;">
+                    <label>Badges Unlocked</label>
+                    <div id="badgeGrid"
+                        style="display:flex; gap:10px; margin-top:10px; overflow-x: auto; padding-bottom:10px;">
+                        <i class="fas fa-award fa-2x" style="color: #ffd700;" title="Early Bird"></i>
+                        <i class="fas fa-fire fa-2x" style="color: #ff4500;" title="On Fire"></i>
+                        <i class="fas fa-check-double fa-2x" style="color: #6366f1;" title="Consistency King"></i>
+                    </div>
+                </div>
+            </div>
             <!-- Add Task Section -->
             <div class="add-task-card card">
                 <h2><i class="fas fa-plus-circle"></i> Add New Task</h2>
@@ -263,5 +299,3 @@
 </body>
 
 </html>
-
-

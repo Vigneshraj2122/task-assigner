@@ -171,6 +171,7 @@ function renderTasks(tasks) {
 
     renderTimetable(sorted);
     renderSpatialTimeline(sorted);
+    generateAIInsights();
 }
 
 function setView(view) {
@@ -450,46 +451,108 @@ async function aiPlanner() {
     loadTasks();
 }
 
-// Student Hub
+// --- Cloud Sync & Backup ---
+function exportData() {
+    const data = {
+        tasks: allTasks,
+        user: user,
+        streak: localStorage.getItem('streak'),
+        lastDoneDate: localStorage.getItem('lastDoneDate')
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `task_scheduler_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    showNotification('Backup downloaded!');
+}
+
+function importDataPrompt() {
+    document.getElementById('importFile').click();
+}
+
+async function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fileReader = new FileReader();
+    fileReader.onload = async (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.tasks) throw new Error('Invalid backup file');
+
+            showNotification('Restoring from backup...');
+
+            // Upload tasks to server
+            for (const task of data.tasks) {
+                delete task.id; // Server will assign new ID
+                await fetch(`${API_URL}/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(task)
+                });
+            }
+
+            if (data.streak) localStorage.setItem('streak', data.streak);
+            if (data.lastDoneDate) localStorage.setItem('lastDoneDate', data.lastDoneDate);
+
+            showNotification('Restore complete! Refreshing...');
+            setTimeout(() => location.reload(), 1500);
+        } catch (err) {
+            alert('Error importing data: ' + err.message);
+        }
+    };
+    fileReader.readAsText(event.target.files[0]);
+}
+
+// Student Hub & Global Tools
 function initStudentHub() {
     const streak = localStorage.getItem('streak') || 0;
     const streakEl = document.getElementById('streakCounter');
     if (streakEl) streakEl.innerText = `${streak} Days`;
+}
 
-    let pomoTime = 25 * 60;
-    let pomoInterval = null;
+// Global Pomodoro
+(function initPomodoro() {
     const display = document.getElementById('pomodoroTimer');
     const startBtn = document.getElementById('startPomodoro');
     const resetBtn = document.getElementById('resetPomodoro');
+    if (!display) return;
 
-    if (startBtn) {
-        startBtn.onclick = () => {
-            if (pomoInterval) {
-                clearInterval(pomoInterval);
-                pomoInterval = null;
-                startBtn.innerText = 'Start';
-            } else {
-                pomoInterval = setInterval(() => {
-                    pomoTime--;
-                    const m = Math.floor(pomoTime / 60);
-                    const s = pomoTime % 60;
-                    if (display) display.innerText = `${m}:${s.toString().padStart(2, '0')}`;
-                    if (pomoTime <= 0) { clearInterval(pomoInterval); alert('Break time!'); }
-                }, 1000);
-                startBtn.innerText = 'Pause';
-            }
-        };
-    }
-    if (resetBtn) {
-        resetBtn.onclick = () => {
+    let pomoTime = 25 * 60;
+    let pomoInterval = null;
+
+    startBtn.onclick = () => {
+        if (pomoInterval) {
             clearInterval(pomoInterval);
             pomoInterval = null;
-            pomoTime = 25 * 60;
-            if (display) display.innerText = "25:00";
-            if (startBtn) startBtn.innerText = "Start";
-        };
-    }
-}
+            startBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+        } else {
+            pomoInterval = setInterval(() => {
+                pomoTime--;
+                const m = Math.floor(pomoTime / 60);
+                const s = pomoTime % 60;
+                display.innerText = `${m}:${s.toString().padStart(2, '0')}`;
+                if (pomoTime <= 0) {
+                    clearInterval(pomoInterval);
+                    const sound = document.getElementById('notifySound');
+                    if (sound) sound.play().catch(() => { });
+                    alert('Time is up! Take a break.');
+                }
+            }, 1000);
+            startBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+        }
+    };
+
+    resetBtn.onclick = () => {
+        clearInterval(pomoInterval);
+        pomoInterval = null;
+        pomoTime = 25 * 60;
+        display.innerText = "25:00";
+        startBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+    };
+})();
 
 // Habits
 async function loadHabits() {
@@ -533,7 +596,7 @@ async function aiPlanner() {
         { title: `[AI] ${topic} Assessment`, desc: "Review quiz and feedback", priority: "Low" }
     ];
     const today = new Date();
-    for(let i=0; i<subtasks.length; i++) {
+    for (let i = 0; i < subtasks.length; i++) {
         const d = new Date();
         d.setDate(today.getDate() + i);
         const task = {
@@ -552,8 +615,8 @@ async function aiPlanner() {
 }
 
 function handleStreak() {
-    const lastDone = localStorage.getItem('lastDoneDate');
     const today = new Date().toISOString().split('T')[0];
+    const lastDone = localStorage.getItem('lastDoneDate');
     if (lastDone !== today) {
         let streak = parseInt(localStorage.getItem('streak') || '0');
         streak++;
@@ -564,4 +627,35 @@ function handleStreak() {
         showNotification(` Streak updated: ${streak} Days!`);
     }
 }
+
+// --- AI Insights ---
+async function generateAIInsights() {
+    const insightContainer = document.getElementById('aiInsights');
+    if (!insightContainer) return;
+
+    const completed = allTasks.filter(t => t.status === 'Done').length;
+    const pending = allTasks.filter(t => t.status !== 'Done').length;
+
+    let advice = "";
+    if (pending > 5) {
+        advice = "You have many pending tasks. Try breaking them into smaller steps!";
+    } else if (completed > pending && completed > 0) {
+        advice = "Great job! You're on fire today. Maintain the momentum!";
+    } else {
+        advice = "Steady progress is the key. Focus on high priority tasks first.";
+    }
+
+    insightContainer.innerHTML = `
+        <div style="padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 12px; border-left: 4px solid var(--primary-solid); margin-bottom: 20px;">
+            <p style="margin:0; font-style: italic; color: var(--text-main); font-size: 0.9rem;">"${advice}"</p>
+            <button onclick="aiPlanner()" class="secondary" style="margin-top:10px; font-size: 0.8rem; width: auto; padding: 6px 12px;">
+                <i class="fas fa-magic"></i> AI Task Planner
+            </button>
+        </div>
+    `;
+}
+
+// Initial call
+setTimeout(generateAIInsights, 1500);
+
 
